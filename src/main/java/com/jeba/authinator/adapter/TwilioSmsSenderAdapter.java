@@ -24,7 +24,7 @@ public class TwilioSmsSenderAdapter implements ITwilioSmsSenderAdapter {
         if (isPhoneNumberValid(to)) {
             String message = sms.getMessage();
             MessageCreator messageCreator = new MessageCreator(to, from, message);
-            System.out.println("Sending sms {}, from {}, to {}" + sms.getMessage() + from +to);
+            System.out.println("Sending sms "+ sms.getMessage()+ " from "+ from+ ": to  "+  to);
             //  Message.creator(new PhoneNumber(sms.getPhoneNumber()), new PhoneNumber("+14256246708"), "msg"); //TODO: remove
             messageCreator.create();
         }
