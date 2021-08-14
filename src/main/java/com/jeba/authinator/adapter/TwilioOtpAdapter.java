@@ -3,9 +3,11 @@ package com.jeba.authinator.adapter;
 import com.jeba.authinator.config.TwilioConfiguration;
 import com.jeba.authinator.domain.PhoneNumber;
 import com.jeba.authinator.domain.entity.OtpEntity;
+import com.jeba.authinator.domain.entity.User;
 import com.jeba.authinator.domain.payload.OTPVerifyPayload;
 import com.jeba.authinator.domain.payload.OtpRequestPayload;
 import com.jeba.authinator.repository.IOtpRepository;
+import com.jeba.authinator.repository.IUserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -20,6 +22,7 @@ public class TwilioOtpAdapter implements ITwilioOtpAdapter {
 
     private final TwilioConfiguration twilioConfiguration;
     private final IOtpRepository otpVerificationRepository;
+    private final IUserRepository userRepository;
 
     @Override
     public OtpEntity sendOtp(com.jeba.authinator.domain.PhoneNumber phoneNumber) {
@@ -28,7 +31,7 @@ public class TwilioOtpAdapter implements ITwilioOtpAdapter {
         AtomicBoolean phoneNumberExist = this.validateIfPhoneNumberExist(phoneNumber);
 
 
-        if (phoneNumberExist.get() == false) {
+        if (phoneNumberExist.get() == true) {
             return sendingOtp(phoneNumber);
         }
 
@@ -94,7 +97,15 @@ public class TwilioOtpAdapter implements ITwilioOtpAdapter {
         }, () -> {
             throw new IllegalStateException("No Number regitered");
         });
-        return entityX.get();
+
+        OtpEntity entity  = entityX.get();
+        entity.setVerified(Boolean.TRUE);
+        otpVerificationRepository.save(entity);
+        User user = new User();
+        user.setPhoneNumber(otpVerifyPayload.getPhoneNumber());
+        userRepository.save(user);
+
+        return entity;
     }
 
     @Override
@@ -146,7 +157,7 @@ public class TwilioOtpAdapter implements ITwilioOtpAdapter {
             ;
             phoneNumberExist.set(validateIfCodeHasBeenAlreadySent(phoneNumber).get());
         }, () -> {
-            phoneNumberExist.set(false);
+            phoneNumberExist.set(true);
         });
 
 
